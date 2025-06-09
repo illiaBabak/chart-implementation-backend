@@ -2,7 +2,7 @@ import express from "express";
 import usersRouter from "./routes/users";
 import cors from "cors";
 
-const app = express();
+export const app = express();
 
 app.use(express.json());
 
