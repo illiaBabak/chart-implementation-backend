@@ -18,7 +18,7 @@ app.use(
   })
 );
 
-app.use("/users", usersRouter);
+app.use("/api/users", usersRouter);
 
 const PORT = process.env.PORT || 3001;
 
