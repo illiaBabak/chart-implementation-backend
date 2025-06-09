@@ -8,7 +8,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "https://chart-implementation-frontend-ikj5.vercel.app/",
     credentials: true,
   })
 );
