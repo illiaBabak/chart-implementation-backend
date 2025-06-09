@@ -8,7 +8,7 @@ app.use(express.json());
 
 app.use(
   cors({
-    origin: "https://chart-implementation-frontend-ikj5.vercel.app/",
+    origin: "https://chart-implementation-frontend-ikj5.vercel.app",
     credentials: true,
   })
 );
