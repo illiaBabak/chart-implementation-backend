@@ -4,11 +4,16 @@ import cors from "cors";
 
 export const app = express();
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://chart-implementation-frontend-ikj5.vercel.app",
+];
+
 app.use(express.json());
 
 app.use(
   cors({
-    origin: "*",
+    origin: allowedOrigins,
     credentials: false,
   })
 );
