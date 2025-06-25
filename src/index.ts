@@ -1,5 +1,6 @@
 import express from "express";
 import usersRouter from "./routes/users";
+import pdfRouter from "./routes/pdf";
 import cors from "cors";
 
 export const app = express();
@@ -19,6 +20,7 @@ app.use(
 );
 
 app.use("/api/users", usersRouter);
+app.use("/api/pdf", pdfRouter);
 
 const PORT = process.env.PORT || 3001;
 

@@ -1,15 +1,15 @@
 import express from "express";
-import { db } from "../db";
+import { getUsers } from "../services/userService";
 
 const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT * FROM users");
-    res.json(rows);
+    const users = await getUsers();
+    res.json(users);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ message: "Internal server error on get users" });
+    res.status(500).json({ error: "Internal server error on get users" });
   }
 });
 
