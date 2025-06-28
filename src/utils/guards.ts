@@ -1,4 +1,4 @@
-import { User } from "../types";
+import { Chart, User } from "../types";
 
 export const isString = (value: unknown): value is string =>
   typeof value === "string";
@@ -36,3 +36,20 @@ export const isUser = (value: unknown): value is User =>
 
 export const isUserArray = (value: unknown): value is User[] =>
   Array.isArray(value) && value.every(isUser);
+
+export const isChart = (value: unknown): value is Chart =>
+  typeof value === "object" &&
+  value !== null &&
+  "chart_type" in value &&
+  "status" in value &&
+  "version" in value &&
+  "key" in value &&
+  "url" in value &&
+  isString(value.chart_type) &&
+  isString(value.status) &&
+  isNumber(value.version) &&
+  isString(value.key) &&
+  (value.url === null || isString(value.url));
+
+export const isChartArray = (value: unknown): value is Chart[] =>
+  Array.isArray(value) && value.every(isChart);

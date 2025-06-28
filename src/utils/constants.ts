@@ -17,3 +17,5 @@ export const FONTS = {
     bolditalics: path.resolve(__dirname, "../fonts/Roboto-BoldItalic.ttf"),
   },
 };
+
+export const SUPABASE_URL = "https://qykuljbmbksrnqunizsy.supabase.co";

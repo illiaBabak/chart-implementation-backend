@@ -8,3 +8,11 @@ export type User = {
   location: string;
   birth_date: string;
 };
+
+export type Chart = {
+  chart_type: string;
+  status: string;
+  version: number;
+  key: string;
+  url: string | null;
+};
