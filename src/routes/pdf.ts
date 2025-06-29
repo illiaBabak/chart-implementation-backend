@@ -67,7 +67,14 @@ router.post("/generate-document", async (req: Request, res: Response) => {
 
 router.get("/get-documents", async (req: Request, res: Response) => {
   try {
-    const charts = await getCharts();
+    const { chartType } = req.body;
+
+    if (!CHART_TYPES.includes(chartType)) {
+      res.status(400).json({ error: "Invalid chart type" });
+      return;
+    }
+
+    const charts = await getCharts(chartType);
 
     res.json(charts);
   } catch (error) {

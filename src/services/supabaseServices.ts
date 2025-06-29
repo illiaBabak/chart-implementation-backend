@@ -33,8 +33,11 @@ export const getChart = async (key: string): Promise<Chart | null> => {
   return isChart(data[0]) ? data[0] : null;
 };
 
-export const getCharts = async (): Promise<Chart[]> => {
-  const { data, error } = await supabase.from("charts").select("*");
+export const getCharts = async (chartType: string): Promise<Chart[]> => {
+  const { data, error } = await supabase
+    .from("charts")
+    .select("*")
+    .eq("chart_type", chartType);
 
   if (error) throw error;
 
