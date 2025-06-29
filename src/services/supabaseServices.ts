@@ -37,7 +37,8 @@ export const getCharts = async (chartType: string): Promise<Chart[]> => {
   const { data, error } = await supabase
     .from("charts")
     .select("*")
-    .eq("chart_type", chartType);
+    .eq("chart_type", chartType)
+    .order("version", { ascending: true });
 
   if (error) throw error;
 

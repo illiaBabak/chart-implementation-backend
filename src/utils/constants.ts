@@ -7,7 +7,7 @@ export const CHART_TYPES = [
   "industry",
   "location",
   "birth_date",
-] as const;
+];
 
 export const FONTS = {
   Roboto: {

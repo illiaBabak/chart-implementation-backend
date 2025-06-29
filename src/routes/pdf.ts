@@ -1,5 +1,5 @@
 import express, { Request, Response } from "express";
-import { CHART_TYPES } from "../utils/constants";
+import { CHART_TYPES, SUPABASE_URL } from "../utils/constants";
 import { generatePdf } from "../utils/generatePdf";
 import { getUsers } from "../services/userServices";
 import { segregateUsers } from "../utils/segregateUsers";
@@ -50,8 +50,10 @@ router.post("/generate-document", async (req: Request, res: Response) => {
 
     await updateChart(key, {
       status: "success",
-      url: `${key}.pdf`,
+      url: `${SUPABASE_URL}/storage/v1/object/public/documents/${key}.pdf`,
     });
+
+    if (version) res.status(200).end();
   } catch (error) {
     await updateChart(key, {
       status: "error",
@@ -67,7 +69,17 @@ router.post("/generate-document", async (req: Request, res: Response) => {
 
 router.get("/get-documents", async (req: Request, res: Response) => {
   try {
-    const { chartType } = req.body;
+    const chartType = req.query.chartType;
+
+    if (!chartType) {
+      res.status(400).json({ error: "Chart type is required" });
+      return;
+    }
+
+    if (!isString(chartType)) {
+      res.status(400).json({ error: "Chart type must be a string" });
+      return;
+    }
 
     if (!CHART_TYPES.includes(chartType)) {
       res.status(400).json({ error: "Invalid chart type" });
