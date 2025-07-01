@@ -47,15 +47,13 @@ export const getCharts = async (chartType: string): Promise<Chart[]> => {
 
 export const getLatestVersionOfChartType = async (
   chartType: string
-): Promise<number | null> => {
-  const { data, error } = await supabase
+): Promise<number> => {
+  const { data } = await supabase
     .from("charts")
     .select("*")
     .eq("chart_type", chartType)
     .order("version", { ascending: false })
     .limit(1);
 
-  if (error) throw error;
-
-  return isChart(data[0]) ? data[0].version : null;
+  return isChart(data?.[0]) ? data[0].version : 0;
 };

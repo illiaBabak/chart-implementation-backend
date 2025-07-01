@@ -3,7 +3,6 @@ import { CHART_TYPES, SUPABASE_URL } from "../utils/constants";
 import { generatePdf } from "../utils/generatePdf";
 import { getUsers } from "../services/userServices";
 import { segregateUsers } from "../utils/segregateUsers";
-import { v4 as uuidv4 } from "uuid";
 import {
   insertChart,
   getLatestVersionOfChartType,
@@ -18,13 +17,11 @@ import { isString } from "../utils/guards";
 const router = express.Router();
 
 router.post("/generate-document", async (req: Request, res: Response) => {
-  const key = uuidv4();
-
   try {
-    const { chartType } = req.body;
+    const { chartType, key } = req.body;
 
-    if (!CHART_TYPES.includes(chartType)) {
-      res.status(400).json({ error: "Invalid chart type" });
+    if (!CHART_TYPES.includes(chartType) || !isString(key)) {
+      res.status(400).json({ error: "Invalid parameters" });
       return;
     }
 
@@ -33,14 +30,18 @@ router.post("/generate-document", async (req: Request, res: Response) => {
     await insertChart({
       chart_type: chartType,
       status: "new",
-      version: (version ?? 0) + 1,
+      version: version + 1,
       key,
       url: null,
     });
 
     const users = await getUsers();
 
-    const pdf = await generatePdf(segregateUsers(users, chartType));
+    const pdf = await generatePdf(
+      segregateUsers(users, chartType),
+      chartType,
+      version + 1
+    );
 
     if (!version) pdf.pipe(res);
 
@@ -55,6 +56,8 @@ router.post("/generate-document", async (req: Request, res: Response) => {
 
     if (version) res.status(200).end();
   } catch (error) {
+    const { key } = req.body;
+
     await updateChart(key, {
       status: "error",
       url: null,

@@ -1,6 +1,7 @@
 import { User } from "../types";
 import { isDate } from "./guards";
 import { CHART_TYPES } from "./constants";
+import { generateRandomColor } from "./generateRandomColor";
 
 export const segregateUsers = (
   users: User[],
@@ -11,9 +12,11 @@ export const segregateUsers = (
   const totalUsers = users.length;
 
   const countMap = users.reduce((acc: Record<string, number>, user) => {
-    const key = isDate(user[chartType])
-      ? new Date(user[chartType]).getFullYear().toString()
-      : user[chartType].toString();
+    const value = user[chartType as keyof User];
+
+    const key = isDate(value)
+      ? new Date(value).getFullYear().toString()
+      : value.toString();
 
     acc[key] = (acc[key] || 0) + 1;
     return acc;
@@ -22,5 +25,6 @@ export const segregateUsers = (
   return Object.entries(countMap).map(([key, count]) => ({
     label: key,
     percentage: Number(((count / totalUsers) * 100).toFixed(1)),
+    color: generateRandomColor(),
   }));
 };
