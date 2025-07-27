@@ -10,6 +10,7 @@ import {
   uploadPdf,
   getChart,
   getCharts,
+  deleteChart,
 } from "../services/supabaseServices";
 import { pdfStreamToBuffer } from "../utils/pdfStreamToBuffer";
 import { isString } from "../utils/guards";
@@ -113,6 +114,22 @@ router.get("/get-document", async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error on get document" });
+  }
+});
+
+router.delete("/delete-document", async (req: Request, res: Response) => {
+  try {
+    const { key } = req.query;
+
+    if (!isString(key)) {
+      res.status(400).json({ error: "Key is required" });
+      return;
+    }
+
+    await deleteChart(key);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error on delete document" });
   }
 });
 

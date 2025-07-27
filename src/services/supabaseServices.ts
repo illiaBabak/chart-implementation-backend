@@ -57,3 +57,18 @@ export const getLatestVersionOfChartType = async (
 
   return isChart(data?.[0]) ? data[0].version : 0;
 };
+
+export const deleteChart = async (key: string) => {
+  const { error: chartError } = await supabase
+    .from("charts")
+    .delete()
+    .eq("key", key);
+
+  if (chartError) throw chartError;
+
+  const { error: storageError } = await supabase.storage
+    .from("documents")
+    .remove([`${key}.pdf`]);
+
+  if (storageError) throw storageError;
+};
