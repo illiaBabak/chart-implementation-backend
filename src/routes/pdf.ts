@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { CHART_TYPES, SUPABASE_URL } from "../utils/constants";
-import { generatePdf } from "../utils/generatePdf";
+import { ChartBuilder } from "../utils/generatePdf";
 import { getUsers } from "../services/userServices";
 import { segregateUsers } from "../utils/segregateUsers";
 import {
@@ -14,6 +14,7 @@ import {
 } from "../services/supabaseServices";
 import { pdfStreamToBuffer } from "../utils/pdfStreamToBuffer";
 import { isString } from "../utils/guards";
+import { capitalize } from "../utils/capitalize";
 
 const router = express.Router();
 
@@ -38,15 +39,52 @@ router.post("/generate-document", async (req: Request, res: Response) => {
 
     const users = await getUsers();
 
-    const pdf = await generatePdf(
-      segregateUsers(users, chartType),
-      chartType,
-      version + 1
-    );
+    const segregatedUsers = segregateUsers(users, chartType);
 
-    if (!version) pdf.pipe(res);
+    const pdf = new ChartBuilder();
 
-    const buffer = await pdfStreamToBuffer(pdf);
+    pdf.setHeader({
+      text: `User stats - ${capitalize(chartType)}, ${new Date(
+        Date.now()
+      ).toUTCString()}`,
+      fontSize: 16,
+      bold: true,
+      alignment: "center",
+      margin: [0, 10],
+    });
+
+    pdf.setFooter((currentPage: number) => {
+      return {
+        columns: [
+          {
+            text: "",
+            width: "*",
+          },
+          {
+            text: `Version ${version + 1}`,
+            fontSize: 12,
+            bold: true,
+            alignment: "center",
+          },
+          {
+            text: `${currentPage}`,
+            fontSize: 12,
+            bold: true,
+            alignment: "right",
+            margin: [0, 0, 10, 0],
+          },
+        ],
+      };
+    });
+
+    pdf.addSVGChart(segregatedUsers);
+    pdf.addHorizontalBarChart(segregatedUsers);
+
+    const pdfDoc = pdf.saveDocument();
+
+    if (!version) pdfDoc.pipe(res);
+
+    const buffer = await pdfStreamToBuffer(pdfDoc);
 
     await uploadPdf(key, buffer);
 

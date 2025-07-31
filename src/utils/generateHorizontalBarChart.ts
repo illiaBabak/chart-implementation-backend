@@ -21,7 +21,6 @@ export const generateHorizontalBarChart = (
         ],
         margin: [0, 0, 0, 6],
       },
-
       {
         text: `${user.label} - ${user.percentage}%`,
         fontSize: 12,
