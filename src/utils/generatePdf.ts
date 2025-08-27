@@ -5,25 +5,20 @@ import { generateSVGChart } from "./generateSVGChart";
 import { generateHorizontalBarChart } from "./generateHorizontalBarChart";
 
 class PDFBuilder {
-  protected document: TDocumentDefinitions = {
+  protected document: TDocumentDefinitions & { content: Content[] } = {
     content: [],
   };
-  protected header: Content | null = null;
-  protected footer: Content | ((currentPage: number) => Content) | null = null;
 
   setHeader(header: Content) {
-    this.header = header;
+    this.document.header = header;
   }
 
   setFooter(footer: Content | ((currentPage: number) => Content)) {
-    this.footer = footer;
+    this.document.footer = footer;
   }
 
   saveDocument() {
     const printer = new PdfPrinter(FONTS);
-
-    if (this.header) this.document.header = this.header;
-    if (this.footer) this.document.footer = this.footer;
 
     return printer.createPdfKitDocument(this.document);
   }
@@ -41,7 +36,7 @@ export class ChartBuilder extends PDFBuilder {
       color: string;
     }[]
   ) {
-    (this.document.content as Content[]).push({
+    this.document.content.push({
       table: {
         widths: ["70%", "30%"],
         body: [
@@ -99,7 +94,7 @@ export class ChartBuilder extends PDFBuilder {
       color: string;
     }[]
   ) {
-    (this.document.content as Content[]).push({
+    this.document.content.push({
       stack: [
         {
           text: "Bar Chart",

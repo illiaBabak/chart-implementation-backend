@@ -14,6 +14,9 @@ export const isDate = (data: unknown): data is Date => {
   return data instanceof Date;
 };
 
+export const isStringArray = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every(isString);
+
 export const isUser = (value: unknown): value is User =>
   typeof value === "object" &&
   value !== null &&

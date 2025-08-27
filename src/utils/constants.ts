@@ -9,6 +9,8 @@ export const CHART_TYPES = [
   "birth_date",
 ];
 
+export const CHART_TYPES_TO_GENERATE = ["pie", "bar", "both"];
+
 export const FONTS = {
   Roboto: {
     normal: path.resolve(__dirname, "../fonts/Roboto-Regular.ttf"),

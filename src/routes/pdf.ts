@@ -1,5 +1,9 @@
 import express, { Request, Response } from "express";
-import { CHART_TYPES, SUPABASE_URL } from "../utils/constants";
+import {
+  CHART_TYPES,
+  CHART_TYPES_TO_GENERATE,
+  SUPABASE_URL,
+} from "../utils/constants";
 import { ChartBuilder } from "../utils/generatePdf";
 import { getUsers } from "../services/userServices";
 import { segregateUsers } from "../utils/segregateUsers";
@@ -13,8 +17,10 @@ import {
   deleteChart,
 } from "../services/supabaseServices";
 import { pdfStreamToBuffer } from "../utils/pdfStreamToBuffer";
-import { isString } from "../utils/guards";
+import { isString, isStringArray } from "../utils/guards";
 import { capitalize } from "../utils/capitalize";
+
+const arhiver = require("archiver");
 
 const router = express.Router();
 
@@ -106,6 +112,103 @@ router.post("/generate-document", async (req: Request, res: Response) => {
     res
       .status(500)
       .json({ error: "Internal server error on generate document" });
+  }
+});
+
+router.post("/generate-archive", async (req: Request, res: Response) => {
+  try {
+    const { chartType, categories } = req.body;
+
+    if (!isString(chartType) || !CHART_TYPES_TO_GENERATE.includes(chartType)) {
+      res.status(400).json({ error: "Invalid chart type to generate" });
+      return;
+    }
+
+    if (
+      !isStringArray(categories) ||
+      !categories.every((category: string) => CHART_TYPES.includes(category))
+    ) {
+      res.status(400).json({ error: "Invalid categories" });
+      return;
+    }
+
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="charts-${chartType}-${Date.now()}.zip"`
+    );
+
+    const users = await getUsers();
+
+    const zip = arhiver("zip", {
+      zlib: { level: 9 },
+    });
+
+    await Promise.all(
+      categories.map(async (category: string) => {
+        const segregatedUsers = segregateUsers(users, category);
+
+        const pdf = new ChartBuilder();
+
+        pdf.setHeader({
+          text: `User stats - ${capitalize(category)}, ${new Date(
+            Date.now()
+          ).toUTCString()}`,
+          fontSize: 16,
+          bold: true,
+          alignment: "center",
+          margin: [0, 10],
+        });
+
+        pdf.setFooter((currentPage: number) => {
+          return {
+            columns: [
+              {
+                text: "",
+                width: "*",
+              },
+              {
+                text: `${currentPage}`,
+                fontSize: 12,
+                bold: true,
+                alignment: "right",
+                margin: [0, 0, 10, 0],
+              },
+            ],
+          };
+        });
+
+        switch (chartType) {
+          case "pie":
+            pdf.addSVGChart(segregatedUsers);
+            break;
+          case "bar":
+            pdf.addHorizontalBarChart(segregatedUsers);
+            break;
+          case "both":
+            pdf.addSVGChart(segregatedUsers);
+            pdf.addHorizontalBarChart(segregatedUsers);
+            break;
+        }
+
+        const pdfDoc = pdf.saveDocument();
+
+        const buffer = await pdfStreamToBuffer(pdfDoc);
+
+        zip.append(buffer, { name: `${category}.pdf` });
+      })
+    );
+
+    await zip.finalize();
+
+    zip.pipe(res);
+  } catch (error) {
+    console.error(error);
+    if (!res.headersSent) {
+      res
+        .status(500)
+        .json({ error: "Internal server error on generate archive" });
+    }
   }
 });
 
