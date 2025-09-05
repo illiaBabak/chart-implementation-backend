@@ -18,6 +18,12 @@ export const FONTS = {
     italics: path.resolve(__dirname, "../fonts/Roboto-Italic.ttf"),
     bolditalics: path.resolve(__dirname, "../fonts/Roboto-BoldItalic.ttf"),
   },
+  NotoCJK: {
+    normal: path.resolve(__dirname, "../fonts/NotoSansCJKsc-Regular.otf"),
+    bold: path.resolve(__dirname, "../fonts/NotoSansCJKsc-Bold.otf"),
+    italics: path.resolve(__dirname, "../fonts/NotoSansCJKsc-Regular.otf"),
+    bolditalics: path.resolve(__dirname, "../fonts/NotoSansCJKsc-Bold.otf"),
+  },
 };
 
 export const SUPABASE_URL = "https://qykuljbmbksrnqunizsy.supabase.co";

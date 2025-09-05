@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, text } from "express";
 import {
   CHART_TYPES,
   CHART_TYPES_TO_GENERATE,
@@ -19,6 +19,7 @@ import {
 import { pdfStreamToBuffer } from "../utils/pdfStreamToBuffer";
 import { isString, isStringArray } from "../utils/guards";
 import { capitalize } from "../utils/capitalize";
+import { translateText } from "../services/ollamaServices";
 
 const arhiver = require("archiver");
 
@@ -47,7 +48,7 @@ router.post("/generate-document", async (req: Request, res: Response) => {
 
     const segregatedUsers = segregateUsers(users, chartType);
 
-    const pdf = new ChartBuilder();
+    const pdf = new ChartBuilder("English");
 
     pdf.setHeader({
       text: `User stats - ${capitalize(chartType)}, ${new Date(
@@ -83,8 +84,8 @@ router.post("/generate-document", async (req: Request, res: Response) => {
       };
     });
 
-    pdf.addSVGChart(segregatedUsers);
-    pdf.addHorizontalBarChart(segregatedUsers);
+    await pdf.addSVGChart(segregatedUsers);
+    await pdf.addHorizontalBarChart(segregatedUsers);
 
     const pdfDoc = pdf.saveDocument();
 
@@ -117,7 +118,7 @@ router.post("/generate-document", async (req: Request, res: Response) => {
 
 router.post("/generate-archive", async (req: Request, res: Response) => {
   try {
-    const { chartType, categories } = req.body;
+    const { chartType, categories, language } = req.body;
 
     if (!isString(chartType) || !CHART_TYPES_TO_GENERATE.includes(chartType)) {
       res.status(400).json({ error: "Invalid chart type to generate" });
@@ -132,6 +133,11 @@ router.post("/generate-archive", async (req: Request, res: Response) => {
       return;
     }
 
+    if (!isString(language)) {
+      res.status(400).json({ error: "Invalid language" });
+      return;
+    }
+
     res.setHeader("Content-Type", "application/zip");
     res.setHeader(
       "Content-Disposition",
@@ -141,67 +147,120 @@ router.post("/generate-archive", async (req: Request, res: Response) => {
     const users = await getUsers();
 
     const zip = arhiver("zip", {
-      zlib: { level: 9 },
+      zlib: { level: 5 },
+    });
+
+    // * Prepare data for translation
+    const headersToTranslate: Record<string, string[]> = {};
+    const labelsToTranslate: Record<string, string[]> = {};
+
+    categories.forEach((category: string) => {
+      // Headers
+      headersToTranslate[category] = [
+        `User stats - ${capitalize(category)}, ${new Date(
+          Date.now()
+        ).toUTCString()}`,
+      ];
+
+      // Labels
+      const segregatedUsers = segregateUsers(users, category);
+      labelsToTranslate[category] = segregatedUsers.map((u) => u.label);
+    });
+
+    // * Translate headers and labels
+    const translatedHeaders = await translateText<Record<string, string[]>>(
+      headersToTranslate,
+      language
+    );
+
+    const translatedLabels = await translateText<Record<string, string[]>>(
+      labelsToTranslate,
+      language
+    );
+
+    // * All users for each category and map translated labels
+    const allSegregatedUsers = categories.map((category: string) => {
+      const segregatedUsers = segregateUsers(users, category);
+      const categoryTranslatedLabels =
+        translatedLabels[category] || labelsToTranslate[category];
+
+      return {
+        category,
+        users: segregatedUsers.map((user, userIndex: number) => ({
+          label: categoryTranslatedLabels[userIndex] || user.label,
+          percentage: user.percentage,
+          color: user.color,
+        })),
+      };
     });
 
     await Promise.all(
-      categories.map(async (category: string) => {
-        const segregatedUsers = segregateUsers(users, category);
+      allSegregatedUsers.map(
+        async ({
+          category,
+          users,
+        }: {
+          category: string;
+          users: { label: string; percentage: number; color: string }[];
+        }) => {
+          const pdf = new ChartBuilder(language);
 
-        const pdf = new ChartBuilder();
+          const categoryHeader =
+            translatedHeaders[category]?.[0] ||
+            headersToTranslate[category]?.[0] ||
+            `User stats - ${capitalize(category)}`;
 
-        pdf.setHeader({
-          text: `User stats - ${capitalize(category)}, ${new Date(
-            Date.now()
-          ).toUTCString()}`,
-          fontSize: 16,
-          bold: true,
-          alignment: "center",
-          margin: [0, 10],
-        });
+          pdf.setHeader({
+            text: categoryHeader,
+            fontSize: 16,
+            bold: true,
+            alignment: "center",
+            margin: [0, 10],
+          });
 
-        pdf.setFooter((currentPage: number) => {
-          return {
-            columns: [
-              {
-                text: "",
-                width: "*",
-              },
-              {
-                text: `${currentPage}`,
-                fontSize: 12,
-                bold: true,
-                alignment: "right",
-                margin: [0, 0, 10, 0],
-              },
-            ],
-          };
-        });
+          pdf.setFooter((currentPage: number) => {
+            return {
+              columns: [
+                {
+                  text: "",
+                  width: "*",
+                },
+                {
+                  text: `${currentPage}`,
+                  fontSize: 12,
+                  bold: true,
+                  alignment: "right",
+                  margin: [0, 0, 10, 0],
+                },
+              ],
+            };
+          });
 
-        switch (chartType) {
-          case "pie":
-            pdf.addSVGChart(segregatedUsers);
-            break;
-          case "bar":
-            pdf.addHorizontalBarChart(segregatedUsers);
-            break;
-          case "both":
-            pdf.addSVGChart(segregatedUsers);
-            pdf.addHorizontalBarChart(segregatedUsers);
-            break;
+          switch (chartType) {
+            case "pie":
+              await pdf.addSVGChart(users);
+              break;
+            case "bar":
+              await pdf.addHorizontalBarChart(users);
+              break;
+            case "both":
+              await pdf.addSVGChart(users);
+              await pdf.addHorizontalBarChart(users);
+              break;
+          }
+
+          const pdfDoc = pdf.saveDocument();
+
+          const buffer = await pdfStreamToBuffer(pdfDoc);
+
+          zip.append(buffer, { name: `${category}.pdf` });
         }
-
-        const pdfDoc = pdf.saveDocument();
-
-        const buffer = await pdfStreamToBuffer(pdfDoc);
-
-        zip.append(buffer, { name: `${category}.pdf` });
-      })
+      )
     );
 
-    await zip.finalize();
-
     zip.pipe(res);
+
+    await zip.finalize();
   } catch (error) {
     console.error(error);
     if (!res.headersSent) {

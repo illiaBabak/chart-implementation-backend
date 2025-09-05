@@ -3,10 +3,12 @@ import { FONTS } from "./constants";
 import { Content, TDocumentDefinitions } from "pdfmake/interfaces";
 import { generateSVGChart } from "./generateSVGChart";
 import { generateHorizontalBarChart } from "./generateHorizontalBarChart";
+import { translateText } from "../services/ollamaServices";
 
 class PDFBuilder {
   protected document: TDocumentDefinitions & { content: Content[] } = {
     content: [],
+    defaultStyle: { font: "NotoCJK" },
   };
 
   setHeader(header: Content) {
@@ -25,11 +27,14 @@ class PDFBuilder {
 }
 
 export class ChartBuilder extends PDFBuilder {
-  constructor() {
+  private language: string;
+
+  constructor(language: string) {
     super();
+    this.language = language;
   }
 
-  addSVGChart(
+  async addSVGChart(
     users: {
       label: string;
       percentage: number;
@@ -50,7 +55,7 @@ export class ChartBuilder extends PDFBuilder {
             {
               stack: [
                 {
-                  text: "Legend",
+                  text: await translateText("Legend", this.language),
                   fontSize: 16,
                   bold: true,
                   margin: [0, 0, 0, 10],
@@ -87,7 +92,7 @@ export class ChartBuilder extends PDFBuilder {
     });
   }
 
-  addHorizontalBarChart(
+  async addHorizontalBarChart(
     users: {
       label: string;
       percentage: number;
@@ -97,7 +102,7 @@ export class ChartBuilder extends PDFBuilder {
     this.document.content.push({
       stack: [
         {
-          text: "Bar Chart",
+          text: await translateText("Bar Chart", this.language),
           fontSize: 14,
           bold: true,
           alignment: "center",
