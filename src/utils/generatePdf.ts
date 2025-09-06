@@ -3,7 +3,7 @@ import { FONTS } from "./constants";
 import { Content, TDocumentDefinitions } from "pdfmake/interfaces";
 import { generateSVGChart } from "./generateSVGChart";
 import { generateHorizontalBarChart } from "./generateHorizontalBarChart";
-import { translateText } from "../services/ollamaServices";
+import { analyzeChart, translateText } from "../services/ollamaServices";
 
 class PDFBuilder {
   protected document: TDocumentDefinitions & { content: Content[] } = {
@@ -116,6 +116,22 @@ export class ChartBuilder extends PDFBuilder {
           }))
         ),
       ],
+    });
+  }
+
+  async addChartAnalysis(
+    users: {
+      label: string;
+      percentage: number;
+      color: string;
+    }[]
+  ) {
+    this.document.content.push({
+      text: await translateText(await analyzeChart(users), this.language),
+      fontSize: 14,
+      bold: true,
+      alignment: "center",
+      margin: [0, 10, 0, 20],
     });
   }
 }

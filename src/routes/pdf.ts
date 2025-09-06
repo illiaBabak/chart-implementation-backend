@@ -249,6 +249,8 @@ router.post("/generate-archive", async (req: Request, res: Response) => {
               break;
           }
 
+          await pdf.addChartAnalysis(users);
+
           const pdfDoc = pdf.saveDocument();
 
           const buffer = await pdfStreamToBuffer(pdfDoc);

@@ -1,3 +1,4 @@
+import { connect } from "http2";
 import { isString } from "../utils/guards";
 
 const OLLAMA_SYSTEM_PROMPT_OBJECT = [
@@ -17,32 +18,39 @@ const OLLAMA_SYSTEM_PROMPT_STRING = [
   "Just the translated text.",
 ].join(" ");
 
-// * Template for the messages to translate text
-const messagesTemplate = (language: string, jsonVal: unknown) => [
-  {
-    role: "system",
-    content: isString(jsonVal)
-      ? OLLAMA_SYSTEM_PROMPT_STRING
-      : OLLAMA_SYSTEM_PROMPT_OBJECT,
-  },
-  {
-    role: "user",
-    content: isString(jsonVal)
-      ? `Target language: ${language}\nText to translate: ${jsonVal}`
-      : `Target language: ${language}\nJSON to translate (return JSON only, same structure):\n${JSON.stringify(
-          jsonVal
-        )}`,
-  },
-];
+const OLLAMA_SYSTEM_PROMPT_ANALYSIS = [
+  "You are a professional analyst.",
+  "Input will be a data with users and their percentages.",
+  "Analyze the data and return a analysis in one sentence.",
+  "IMPORTANT: Return ONLY the analysis, no quotes, no JSON, no extra text.",
+  "Just the analysis. Return in the English language.",
+].join(" ");
 
-// * Implementation
-export async function translateText<T>(input: T, language: string): Promise<T> {
+export const translateText = async <T>(
+  input: T,
+  language: string
+): Promise<T> => {
   const response = await fetch("http://localhost:11434/api/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       model: "llama3:8b",
-      messages: messagesTemplate(language, input),
+      messages: [
+        {
+          role: "system",
+          content: isString(input)
+            ? OLLAMA_SYSTEM_PROMPT_STRING
+            : OLLAMA_SYSTEM_PROMPT_OBJECT,
+        },
+        {
+          role: "user",
+          content: isString(input)
+            ? `Target language: ${language}\nText to translate: ${input}`
+            : `Target language: ${language}\nJSON to translate (return JSON only, same structure):\n${JSON.stringify(
+                input
+              )}`,
+        },
+      ],
       stream: false,
       options: { temperature: 0, num_ctx: 2048, num_predict: 2048 },
       keep_alive: "15m",
@@ -69,4 +77,42 @@ export async function translateText<T>(input: T, language: string): Promise<T> {
       return input;
     }
   }
-}
+};
+
+export const analyzeChart = async (
+  data: {
+    label: string;
+    percentage: number;
+    color: string;
+  }[]
+): Promise<string> => {
+  const response = await fetch("http://localhost:11434/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "llama3:8b",
+      messages: [
+        {
+          role: "system",
+          content: OLLAMA_SYSTEM_PROMPT_ANALYSIS,
+        },
+        {
+          role: "user",
+          content: `Data to analyze: ${JSON.stringify(data)}`,
+        },
+      ],
+      stream: false,
+      options: { temperature: 0, num_ctx: 2048, num_predict: 2048 },
+      keep_alive: "15m",
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(await response.text());
+  }
+
+  const responseJson = await response.json();
+  const content = responseJson.message.content;
+
+  return isString(content) ? content : "Failed to analyze chart";
+};
