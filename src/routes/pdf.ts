@@ -1,4 +1,4 @@
-import express, { Request, Response, text } from "express";
+import express, { Request, Response } from "express";
 import {
   CHART_TYPES,
   CHART_TYPES_TO_GENERATE,
@@ -20,8 +20,7 @@ import { pdfStreamToBuffer } from "../utils/pdfStreamToBuffer";
 import { isString, isStringArray } from "../utils/guards";
 import { capitalize } from "../utils/capitalize";
 import { translateText } from "../services/ollamaServices";
-
-const arhiver = require("archiver");
+import archiver from "archiver";
 
 const router = express.Router();
 
@@ -30,9 +29,15 @@ router.post("/generate-document", async (req: Request, res: Response) => {
     const { chartType, key } = req.body;
 
     if (!CHART_TYPES.includes(chartType) || !isString(key)) {
-      res.status(400).json({ error: "Invalid parameters" });
+      res.status(422).json({ error: "Invalid parameters" });
       return;
     }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="chart-${chartType}-${Date.now()}.pdf"`
+    );
 
     const version = await getLatestVersionOfChartType(chartType);
 
@@ -100,7 +105,7 @@ router.post("/generate-document", async (req: Request, res: Response) => {
       url: `${SUPABASE_URL}/storage/v1/object/public/documents/${key}.pdf`,
     });
 
-    if (version) res.status(200).end();
+    res.status(200).end(buffer);
   } catch (error) {
     const { key } = req.body;
 
@@ -109,7 +114,7 @@ router.post("/generate-document", async (req: Request, res: Response) => {
       url: null,
     });
 
-    console.error(error);
+    console.error("Error in POST /generate-document:", error);
     res
       .status(500)
       .json({ error: "Internal server error on generate document" });
@@ -121,7 +126,7 @@ router.post("/generate-archive", async (req: Request, res: Response) => {
     const { chartType, categories, language } = req.body;
 
     if (!isString(chartType) || !CHART_TYPES_TO_GENERATE.includes(chartType)) {
-      res.status(400).json({ error: "Invalid chart type to generate" });
+      res.status(422).json({ error: "Invalid chart type to generate" });
       return;
     }
 
@@ -129,12 +134,12 @@ router.post("/generate-archive", async (req: Request, res: Response) => {
       !isStringArray(categories) ||
       !categories.every((category: string) => CHART_TYPES.includes(category))
     ) {
-      res.status(400).json({ error: "Invalid categories" });
+      res.status(422).json({ error: "Invalid categories" });
       return;
     }
 
     if (!isString(language)) {
-      res.status(400).json({ error: "Invalid language" });
+      res.status(422).json({ error: "Invalid language" });
       return;
     }
 
@@ -146,9 +151,7 @@ router.post("/generate-archive", async (req: Request, res: Response) => {
 
     const users = await getUsers();
 
-    const zip = arhiver("zip", {
-      zlib: { level: 5 },
-    });
+    const zip = archiver("zip", { zlib: { level: 5 } });
 
     // * Prepare data for translation
     const headersToTranslate: Record<string, string[]> = {};
@@ -264,7 +267,7 @@ router.post("/generate-archive", async (req: Request, res: Response) => {
 
     await zip.finalize();
   } catch (error) {
-    console.error(error);
+    console.error("Error in POST /generate-archive:", error);
     if (!res.headersSent) {
       res
         .status(500)
@@ -278,17 +281,17 @@ router.get("/get-documents", async (req: Request, res: Response) => {
     const chartType = req.query.chartType;
 
     if (!chartType) {
-      res.status(400).json({ error: "Chart type is required" });
+      res.status(422).json({ error: "Chart type is required" });
       return;
     }
 
     if (!isString(chartType)) {
-      res.status(400).json({ error: "Chart type must be a string" });
+      res.status(422).json({ error: "Chart type must be a string" });
       return;
     }
 
     if (!CHART_TYPES.includes(chartType)) {
-      res.status(400).json({ error: "Invalid chart type" });
+      res.status(422).json({ error: "Invalid chart type" });
       return;
     }
 
@@ -296,7 +299,7 @@ router.get("/get-documents", async (req: Request, res: Response) => {
 
     res.json(charts);
   } catch (error) {
-    console.error(error);
+    console.error("Error in GET /get-documents:", error);
     res.status(500).json({ error: "Internal server error on get documents" });
   }
 });
@@ -306,7 +309,7 @@ router.get("/get-document", async (req: Request, res: Response) => {
     const { key } = req.query;
 
     if (!isString(key)) {
-      res.status(400).json({ error: "Key is required" });
+      res.status(422).json({ error: "Key is required" });
       return;
     }
 
@@ -314,7 +317,7 @@ router.get("/get-document", async (req: Request, res: Response) => {
 
     res.json(chart);
   } catch (error) {
-    console.error(error);
+    console.error("Error in GET /get-document:", error);
     res.status(500).json({ error: "Internal server error on get document" });
   }
 });
@@ -324,13 +327,13 @@ router.delete("/delete-document", async (req: Request, res: Response) => {
     const { key } = req.query;
 
     if (!isString(key)) {
-      res.status(400).json({ error: "Key is required" });
+      res.status(422).json({ error: "Key is required" });
       return;
     }
 
     await deleteChart(key);
   } catch (error) {
-    console.error(error);
+    console.error("Error in DELETE /delete-document:", error);
     res.status(500).json({ error: "Internal server error on delete document" });
   }
 });

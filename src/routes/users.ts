@@ -1,14 +1,14 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import { getUsers } from "../services/userServices";
 
 const router = express.Router();
 
-router.get("/", async (req, res) => {
+router.get("/", async (_req: Request, res: Response) => {
   try {
     const users = await getUsers();
-    res.json(users);
+    res.status(200).json(users);
   } catch (err) {
-    console.error(err);
+    console.error("Error in GET /users:", err);
     res.status(500).json({ error: "Internal server error on get users" });
   }
 });

@@ -5,10 +5,23 @@ import { generateSVGChart } from "./generateSVGChart";
 import { generateHorizontalBarChart } from "./generateHorizontalBarChart";
 import { analyzeChart, translateText } from "../services/ollamaServices";
 
+const selectFontForLanguage = (language: string): string => {
+  switch (language) {
+    case "中文":
+      return "NotoSC";
+    case "日本語":
+      return "NotoJP";
+    case "한국어":
+      return "NotoKR";
+    default:
+      return "Noto";
+  }
+};
+
 class PDFBuilder {
   protected document: TDocumentDefinitions & { content: Content[] } = {
     content: [],
-    defaultStyle: { font: "NotoCJK" },
+    defaultStyle: { font: "Noto" },
   };
 
   setHeader(header: Content) {
@@ -32,6 +45,9 @@ export class ChartBuilder extends PDFBuilder {
   constructor(language: string) {
     super();
     this.language = language;
+    this.document.defaultStyle = {
+      font: selectFontForLanguage(language),
+    };
   }
 
   async addSVGChart(

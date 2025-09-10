@@ -1,4 +1,3 @@
-import { connect } from "http2";
 import { isString } from "../utils/guards";
 
 const OLLAMA_SYSTEM_PROMPT_OBJECT = [

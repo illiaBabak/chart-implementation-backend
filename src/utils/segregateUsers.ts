@@ -3,6 +3,7 @@ import { isDate } from "./guards";
 import { CHART_TYPES } from "./constants";
 import { generateRandomColor } from "./generateRandomColor";
 
+// * Segregate users by chart type
 export const segregateUsers = (
   users: User[],
   chartType: (typeof CHART_TYPES)[number]

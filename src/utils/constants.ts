@@ -12,17 +12,29 @@ export const CHART_TYPES = [
 export const CHART_TYPES_TO_GENERATE = ["pie", "bar", "both"];
 
 export const FONTS = {
-  Roboto: {
-    normal: path.resolve(__dirname, "../fonts/Roboto-Regular.ttf"),
-    bold: path.resolve(__dirname, "../fonts/Roboto-Bold.ttf"),
-    italics: path.resolve(__dirname, "../fonts/Roboto-Italic.ttf"),
-    bolditalics: path.resolve(__dirname, "../fonts/Roboto-BoldItalic.ttf"),
+  Noto: {
+    normal: path.resolve(__dirname, "../fonts/NotoSans-Regular.ttf"),
+    bold: path.resolve(__dirname, "../fonts/NotoSans-Bold.ttf"),
+    italics: path.resolve(__dirname, "../fonts/NotoSans-Italic.ttf"),
+    bolditalics: path.resolve(__dirname, "../fonts/NotoSans-BoldItalic.ttf"),
   },
-  NotoCJK: {
-    normal: path.resolve(__dirname, "../fonts/NotoSansCJKsc-Regular.otf"),
-    bold: path.resolve(__dirname, "../fonts/NotoSansCJKsc-Bold.otf"),
-    italics: path.resolve(__dirname, "../fonts/NotoSansCJKsc-Regular.otf"),
-    bolditalics: path.resolve(__dirname, "../fonts/NotoSansCJKsc-Bold.otf"),
+  NotoSC: {
+    normal: path.resolve(__dirname, "../fonts/NotoSansSC-Regular.ttf"),
+    bold: path.resolve(__dirname, "../fonts/NotoSansSC-Bold.ttf"),
+    italics: path.resolve(__dirname, "../fonts/NotoSansSC-Regular.ttf"),
+    bolditalics: path.resolve(__dirname, "../fonts/NotoSansSC-Bold.ttf"),
+  },
+  NotoJP: {
+    normal: path.resolve(__dirname, "../fonts/NotoSansJP-Regular.otf"),
+    bold: path.resolve(__dirname, "../fonts/NotoSansJP-Bold.otf"),
+    italics: path.resolve(__dirname, "../fonts/NotoSansJP-Regular.otf"),
+    bolditalics: path.resolve(__dirname, "../fonts/NotoSansJP-Bold.otf"),
+  },
+  NotoKR: {
+    normal: path.resolve(__dirname, "../fonts/NotoSansKR-Regular.otf"),
+    bold: path.resolve(__dirname, "../fonts/NotoSansKR-Bold.otf"),
+    italics: path.resolve(__dirname, "../fonts/NotoSansKR-Regular.otf"),
+    bolditalics: path.resolve(__dirname, "../fonts/NotoSansKR-Bold.otf"),
   },
 };
 

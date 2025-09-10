@@ -30,14 +30,14 @@ const allowedOrigins = [
   "https://chart-implementation-frontend-ikj5.vercel.app",
 ];
 
-app.use(express.json());
-
 app.use(
   cors({
     origin: allowedOrigins,
     credentials: true,
   })
 );
+
+app.use(express.json({ limit: "10mb" }));
 
 app.use("/api/users", usersRouter);
 app.use("/api/pdf", pdfRouter);
