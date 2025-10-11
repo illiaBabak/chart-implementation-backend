@@ -12,18 +12,23 @@ export const segregateUsers = (
 
   const totalUsers = users.length;
 
-  const countMap = users.reduce((acc: Record<string, number>, user) => {
-    const value = user[chartType as keyof User];
+  const usersCountByCategory = users.reduce(
+    (acc: Record<string, number>, user) => {
+      const userField = user[chartType as keyof User];
 
-    const key = isDate(value)
-      ? new Date(value).getFullYear().toString()
-      : value.toString();
+      const isUserFieldDate = isDate(userField);
 
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
+      const yearFromDate = new Date(userField).getFullYear().toString();
 
-  return Object.entries(countMap).map(([key, count]) => ({
+      const key = isUserFieldDate ? yearFromDate : userField.toString();
+
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    },
+    {}
+  );
+
+  return Object.entries(usersCountByCategory).map(([key, count]) => ({
     label: key,
     percentage: Number(((count / totalUsers) * 100).toFixed(1)),
     color: generateRandomColor(),

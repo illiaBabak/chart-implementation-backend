@@ -71,7 +71,10 @@ export class ChartBuilder extends PDFBuilder {
             {
               stack: [
                 {
-                  text: await translateText("Legend", this.language),
+                  text:
+                    this.language === "English"
+                      ? "Legend"
+                      : await translateText("Legend", this.language),
                   fontSize: 16,
                   bold: true,
                   margin: [0, 0, 0, 10],
@@ -118,7 +121,10 @@ export class ChartBuilder extends PDFBuilder {
     this.document.content.push({
       stack: [
         {
-          text: await translateText("Bar Chart", this.language),
+          text:
+            this.language === "English"
+              ? "Bar Chart"
+              : await translateText("Bar Chart", this.language),
           fontSize: 14,
           bold: true,
           alignment: "center",
@@ -143,7 +149,10 @@ export class ChartBuilder extends PDFBuilder {
     }[]
   ) {
     this.document.content.push({
-      text: await translateText(await analyzeChart(users), this.language),
+      text:
+        this.language === "English"
+          ? await analyzeChart(users)
+          : await translateText(await analyzeChart(users), this.language),
       fontSize: 14,
       bold: true,
       alignment: "center",
