@@ -307,7 +307,7 @@ router.get("/get-documents", async (req: Request, res: Response) => {
 router.get("/get-document", async (req: Request, res: Response) => {
   try {
     const { key } = req.query;
-    console.log("key", key);
+
     if (!isString(key)) {
       res.status(422).json({ error: "Key is required" });
       return;
@@ -324,8 +324,8 @@ router.get("/get-document", async (req: Request, res: Response) => {
 
 router.delete("/delete-document", async (req: Request, res: Response) => {
   try {
-    const { key } = req.query;
-    console.log("key", key);
+    const { key } = req.body;
+
     if (!isString(key)) {
       res.status(422).json({ error: "Key is required" });
       return;
