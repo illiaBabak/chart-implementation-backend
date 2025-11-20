@@ -1,6 +1,6 @@
 import PdfPrinter from "pdfmake";
 import { FONTS } from "./constants";
-import { Content, TDocumentDefinitions } from "pdfmake/interfaces";
+import { Content, TableCell, TDocumentDefinitions } from "pdfmake/interfaces";
 import { generateSVGChart } from "./generateSVGChart";
 import { generateHorizontalBarChart } from "./generateHorizontalBarChart";
 import { analyzeChart, translateText } from "../services/ollamaServices";
@@ -50,6 +50,67 @@ export class ChartBuilder extends PDFBuilder {
     };
   }
 
+  // async addSVGChart(
+  //   users: {
+  //     label: string;
+  //     percentage: number;
+  //     color: string;
+  //   }[]
+  // ) {
+  //   this.document.content.push({
+  //     table: {
+  //       widths: ["70%", "30%"],
+  //       body: [
+  //         [
+  //           {
+  //             svg: generateSVGChart(users),
+  //             width: 250,
+  //             height: 250,
+  //             alignment: "center",
+  //           },
+  //           {
+  //             stack: [
+  //               {
+  //                 text:
+  //                   this.language === "English"
+  //                     ? "Legend"
+  //                     : await translateText("Legend", this.language),
+  //                 fontSize: 16,
+  //                 bold: true,
+  //                 margin: [0, 0, 0, 10],
+  //               },
+  //               ...users.map((user) => ({
+  //                 columns: [
+  //                   {
+  //                     canvas: [
+  //                       {
+  //                         type: "rect",
+  //                         x: 0,
+  //                         y: 0,
+  //                         w: 15,
+  //                         h: 15,
+  //                         color: user.color,
+  //                       },
+  //                     ],
+  //                     width: 20,
+  //                   },
+  //                   {
+  //                     text: `${user.label}`,
+  //                     margin: [5, 2, 0, 2],
+  //                   },
+  //                 ],
+  //                 margin: [0, 2],
+  //               })),
+  //             ],
+  //             margin: [20, 0, 0, 0],
+  //           },
+  //         ],
+  //       ],
+  //     },
+  //     layout: "noBorders",
+  //   });
+  // }
+
   async addSVGChart(
     users: {
       label: string;
@@ -57,55 +118,59 @@ export class ChartBuilder extends PDFBuilder {
       color: string;
     }[]
   ) {
+    const legendTitle: Content = {
+      text:
+        this.language === "English"
+          ? "Legend"
+          : await translateText("Legend", this.language),
+      fontSize: 16,
+      bold: true,
+      margin: [0, 0, 0, 10],
+    };
+
+    const legendItems: Content[] = users.map(
+      (user): Content => ({
+        columns: [
+          {
+            canvas: [
+              {
+                type: "rect",
+                x: 0,
+                y: 0,
+                w: 15,
+                h: 15,
+                color: user.color,
+              },
+            ],
+            width: 20,
+          },
+          {
+            text: user.label,
+            margin: [5, 2, 0, 2],
+          },
+        ],
+        margin: [0, 2],
+      })
+    );
+
+    const leftCell: TableCell = {
+      svg: generateSVGChart(users),
+      width: 250,
+      height: 250,
+      alignment: "center",
+    };
+
+    const rightCell: TableCell = {
+      stack: [legendTitle, ...legendItems],
+      margin: [20, 0, 0, 0],
+    };
+
+    const body: TableCell[][] = [[leftCell, rightCell]];
+
     this.document.content.push({
       table: {
         widths: ["70%", "30%"],
-        body: [
-          [
-            {
-              svg: generateSVGChart(users),
-              width: 250,
-              height: 250,
-              alignment: "center",
-            },
-            {
-              stack: [
-                {
-                  text:
-                    this.language === "English"
-                      ? "Legend"
-                      : await translateText("Legend", this.language),
-                  fontSize: 16,
-                  bold: true,
-                  margin: [0, 0, 0, 10],
-                },
-                ...users.map((user) => ({
-                  columns: [
-                    {
-                      canvas: [
-                        {
-                          type: "rect",
-                          x: 0,
-                          y: 0,
-                          w: 15,
-                          h: 15,
-                          color: user.color,
-                        },
-                      ],
-                      width: 20,
-                    },
-                    {
-                      text: `${user.label}`,
-                      margin: [5, 2, 0, 2],
-                    },
-                  ],
-                  margin: [0, 2],
-                })),
-              ],
-              margin: [20, 0, 0, 0],
-            },
-          ],
-        ],
+        body,
       },
       layout: "noBorders",
     });

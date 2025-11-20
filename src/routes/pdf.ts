@@ -33,12 +33,6 @@ router.post("/generate-document", async (req: Request, res: Response) => {
       return;
     }
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="chart-${chartType}-${Date.now()}.pdf"`
-    );
-
     const version = await getLatestVersionOfChartType(chartType);
 
     await insertChart({
@@ -98,6 +92,12 @@ router.post("/generate-document", async (req: Request, res: Response) => {
 
     const buffer = await pdfStreamToBuffer(pdfDoc);
 
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="chart-${chartType}-${Date.now()}.pdf"`
+    );
+
     await uploadPdf(key, buffer);
 
     await updateChart(key, {
@@ -142,12 +142,6 @@ router.post("/generate-archive", async (req: Request, res: Response) => {
       res.status(422).json({ error: "Invalid language" });
       return;
     }
-
-    res.setHeader("Content-Type", "application/zip");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="charts-${chartType}-${Date.now()}.zip"`
-    );
 
     const users = await getUsers();
 
@@ -263,9 +257,16 @@ router.post("/generate-archive", async (req: Request, res: Response) => {
       )
     );
 
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="charts-${chartType}-${Date.now()}.zip"`
+    );
+
     zip.pipe(res);
 
     await zip.finalize();
+    res.status(200);
   } catch (error) {
     console.error("Error in POST /generate-archive:", error);
     if (!res.headersSent) {
@@ -332,6 +333,8 @@ router.delete("/delete-document", async (req: Request, res: Response) => {
     }
 
     await deleteChart(key);
+
+    res.status(204).send();
   } catch (error) {
     console.error("Error in DELETE /delete-document:", error);
     res.status(500).json({ error: "Internal server error on delete document" });
