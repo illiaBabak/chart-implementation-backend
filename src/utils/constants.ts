@@ -40,4 +40,4 @@ export const FONTS = {
 
 export const SUPABASE_URL = "https://qykuljbmbksrnqunizsy.supabase.co";
 
-export const OLLAMA_URL = "http://ollama.railway.internal:11434";
+export const OLLAMA_URL = "http://ollama.railway.internal:11434/api/chat";
