@@ -1,3 +1,4 @@
+import { OLLAMA_URL } from "../utils/constants";
 import { isString } from "../utils/guards";
 
 const OLLAMA_SYSTEM_PROMPT_OBJECT = [
@@ -29,7 +30,7 @@ export const translateText = async <T>(
   input: T,
   language: string
 ): Promise<T> => {
-  const response = await fetch("http://localhost:11434/api/chat", {
+  const response = await fetch(OLLAMA_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -85,7 +86,7 @@ export const analyzeChart = async (
     color: string;
   }[]
 ): Promise<string> => {
-  const response = await fetch("http://localhost:11434/api/chat", {
+  const response = await fetch(OLLAMA_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
