@@ -34,7 +34,7 @@ export const translateText = async <T>(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "llama3:8b",
+      model: "llama3",
       messages: [
         {
           role: "system",
@@ -90,7 +90,7 @@ export const analyzeChart = async (
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "llama3:8b",
+      model: "llama3",
       messages: [
         {
           role: "system",
