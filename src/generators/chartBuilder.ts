@@ -1,9 +1,8 @@
-import PdfPrinter from "pdfmake";
-import { FONTS } from "./constants";
-import { Content, TableCell, TDocumentDefinitions } from "pdfmake/interfaces";
-import { generateSVGChart } from "./generateSVGChart";
-import { generateHorizontalBarChart } from "./generateHorizontalBarChart";
+import { Content, TableCell } from "pdfmake/interfaces";
+import { generateSVGChart } from "../utils/generateSVGChart";
+import { generateHorizontalBarChart } from "../utils/generateHorizontalBarChart";
 import { analyzeChart, translateText } from "../services/ollamaServices";
+import { PDFBuilder } from "./pdfBuilder";
 
 const selectFontForLanguage = (language: string): string => {
   switch (language) {
@@ -18,27 +17,6 @@ const selectFontForLanguage = (language: string): string => {
   }
 };
 
-class PDFBuilder {
-  protected document: TDocumentDefinitions & { content: Content[] } = {
-    content: [],
-    defaultStyle: { font: "Noto" },
-  };
-
-  setHeader(header: Content) {
-    this.document.header = header;
-  }
-
-  setFooter(footer: Content | ((currentPage: number) => Content)) {
-    this.document.footer = footer;
-  }
-
-  saveDocument() {
-    const printer = new PdfPrinter(FONTS);
-
-    return printer.createPdfKitDocument(this.document);
-  }
-}
-
 export class ChartBuilder extends PDFBuilder {
   private language: string;
 
@@ -49,67 +27,6 @@ export class ChartBuilder extends PDFBuilder {
       font: selectFontForLanguage(language),
     };
   }
-
-  // async addSVGChart(
-  //   users: {
-  //     label: string;
-  //     percentage: number;
-  //     color: string;
-  //   }[]
-  // ) {
-  //   this.document.content.push({
-  //     table: {
-  //       widths: ["70%", "30%"],
-  //       body: [
-  //         [
-  //           {
-  //             svg: generateSVGChart(users),
-  //             width: 250,
-  //             height: 250,
-  //             alignment: "center",
-  //           },
-  //           {
-  //             stack: [
-  //               {
-  //                 text:
-  //                   this.language === "English"
-  //                     ? "Legend"
-  //                     : await translateText("Legend", this.language),
-  //                 fontSize: 16,
-  //                 bold: true,
-  //                 margin: [0, 0, 0, 10],
-  //               },
-  //               ...users.map((user) => ({
-  //                 columns: [
-  //                   {
-  //                     canvas: [
-  //                       {
-  //                         type: "rect",
-  //                         x: 0,
-  //                         y: 0,
-  //                         w: 15,
-  //                         h: 15,
-  //                         color: user.color,
-  //                       },
-  //                     ],
-  //                     width: 20,
-  //                   },
-  //                   {
-  //                     text: `${user.label}`,
-  //                     margin: [5, 2, 0, 2],
-  //                   },
-  //                 ],
-  //                 margin: [0, 2],
-  //               })),
-  //             ],
-  //             margin: [20, 0, 0, 0],
-  //           },
-  //         ],
-  //       ],
-  //     },
-  //     layout: "noBorders",
-  //   });
-  // }
 
   async addSVGChart(
     users: {

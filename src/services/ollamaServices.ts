@@ -1,6 +1,8 @@
 import { OLLAMA_URL } from "../utils/constants";
 import { isString } from "../utils/guards";
 
+// Have prompt to object and string because we need to translate headers, labels and text separately.
+
 const OLLAMA_SYSTEM_PROMPT_OBJECT = [
   "You are a professional translator.",
   "Input will be an object where keys are category names and values are arrays of strings to translate.",
@@ -53,7 +55,7 @@ export const translateText = async <T>(
       ],
       stream: false,
       options: { temperature: 0, num_ctx: 2048, num_predict: 2048 },
-      keep_alive: "15m",
+      keep_alive: "5m",
       format: isString(input) ? undefined : "json",
     }),
   });

@@ -4,7 +4,7 @@ import {
   CHART_TYPES_TO_GENERATE,
   SUPABASE_URL,
 } from "../utils/constants";
-import { ChartBuilder } from "../utils/generatePdf";
+import { ChartBuilder } from "../generators/chartBuilder";
 import { getUsers } from "../services/userServices";
 import { segregateUsers } from "../utils/segregateUsers";
 import {
